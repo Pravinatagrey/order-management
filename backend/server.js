@@ -4,11 +4,11 @@ const express = require('express');
 const cors = require('cors');
 const connectDB = require('./config/db');
 //routes
-const authRoutes = require('./routes/authRoutes');
-const userRoutes = require('./routes/userRoutes');
-const cartRoutes = require('./routes/cartRoutes');
+const authRoutes = require('./routes/authroutes');
+const userRoutes = require('./routes/userroutes');
+const cartRoutes = require('./routes/cartroutes');
 const productRouter = require('./routes/product');
-const addressRoute = require('./routes/addressRoute');
+const addressRoute = require('./routes/addressroute');
 
 //image route
 const pathData = require("./routes/product");
