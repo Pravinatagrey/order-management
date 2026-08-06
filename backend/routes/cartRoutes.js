@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 
 const {handleError, verifyAuth } = require("../utils");
-const { getCart, addToCart, checkout } = require("../controllers/cartController");
+const { getCart, addToCart, checkout } = require("../controllers/CartController");
 
 // Cart Routes
 router.get("/", verifyAuth, getCart);
