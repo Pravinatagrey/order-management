@@ -1,6 +1,10 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
-const { nanoid } = require('nanoid');
+// Remove: const { nanoid } = require('nanoid');
+const crypto = require('crypto');
+
+// Generate custom short ID (equivalent to nanoid length):
+const generateId = (size = 21) => crypto.randomBytes(size).toString('base64url').slice(0, size);
 
 /* This file defines the Mongoose schema and model for users in the task management application. */
 const UserSchema = new mongoose.Schema({
@@ -52,7 +56,7 @@ UserSchema.methods.addAddress = async function (address) {
   if (!address || address.trim() === "") {
     throw new Error("Address cannot be empty");
   }
-  this.addresses.push({ address, _id: nanoid()  }); 
+  this.addresses.push({ address, _id: generateId()  }); 
   return await this.save();
 }
 
