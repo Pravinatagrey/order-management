@@ -5,7 +5,7 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
-
+/*
 const authRouter = require('./routes/auth')
 const productRouter = require('./routes/product')
 const cartRouter = require('./routes/cart')
@@ -20,4 +20,5 @@ const port = process.env.PORT || config.port
 app.listen(port, () => {
     console.log(`Foods Backend running at port ${port}`);
 });
+*/
 
