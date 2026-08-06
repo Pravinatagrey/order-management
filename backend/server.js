@@ -18,8 +18,6 @@ const app = express();
 app.use(express.json());
 connectDB();
 app.use(cors({ origin: process.env.FRONTEND_URL || 'http://localhost', credentials: true }));
-//development
-//app.use(cors({ origin: 'http://localhost:3000', credentials: true }));
 
 app.use("/api/v1",pathData);//direct image access   
 //image url
