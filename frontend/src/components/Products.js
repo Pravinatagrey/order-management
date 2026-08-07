@@ -7,7 +7,7 @@ import {
 import { Box } from "@mui/system";
 import axios from "axios";
 import { useSnackbar } from "notistack";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { config } from "../App";
 import Footer from "./Footer";
 import Header from "./Header";
@@ -32,8 +32,7 @@ const Products = () => {
   const { enqueueSnackbar } = useSnackbar();
   const [productData,updateProduct]=useState([]);
   const [isFetching,updateFecthed]=useState(false);
-  const [productNotFound,updateProductNotFound]=useState(false);
-  const [timerId,udpateTimerId]=useState("");
+  const [productNotFound]=useState(false);
   const [userLoggedIn,updateUserLoggedIn]=useState(false);
   const [cartData,updateCartData]=useState([]);
   const [userCartItems,updateUserCartItems]=useState([]);
@@ -81,70 +80,6 @@ const Products = () => {
       console.log(e.message)
     }
   };
-/*
-  // Implement Menu Tabs logic
-  const performSearch = async (text) => {
-   try {
-      if (!text) {
-        performAPICall();
-        return;
-      }
-      let filtered = productData.filter(
-        (x) =>
-          x.name.toLowerCase().match(text.toLowerCase()) ||
-          x.category.toLowerCase().match(text.toLowerCase())
-      );
-      if (filtered.length === 0) {
-        updateProductNotFound(true);
-      } else {
-        updateProductNotFound(false);
-        updateProduct(filtered);
-      }
-    } catch (e) {
-      console.log(e.message);
-    }
-  };
-*/
-  // TODO: CRIO_TASK_MODULE_PRODUCTS - Optimise API calls with debounce search implementation
-  /**
-   * Definition for debounce handler
-   * With debounce, this is the function to be called whenever the user types text in the searchbar field
-   *
-   * @param {{ target: { value: string } }} event
-   *    JS event object emitted from the search input field
-   *
-   * @param {NodeJS.Timeout} debounceTimeout
-   *    Timer id set for the previous debounce call
-   *
-   */
-  /*const debounceSearch = (event, debounceTimeout) => {
-    clearTimeout(debounceTimeout);
-    // wait for 500 ms and make a call
-    // 1st request
-    let timerId = setTimeout(() => performSearch(event), 500);
-    udpateTimerId(timerId);
-  };
-*/
-
-  useEffect( ()=>{
-    async function onLoad(){
-       const product=await performAPICall();
-      let user=localStorage.getItem('username');
-      {user && updateUserLoggedIn(true)} 
-      let token=localStorage.getItem('token');
-      if(token){
-        updateUserToken(token);
-        const cartItems=await fetchCart(token);
-        //console.log()
-        updateUserCartItems(cartItems);// Array of objects with productId and quantity of products in cart
-        const cartData=await generateCartItemsFrom(cartItems,product)
-        updateCartData(cartData);
-      }
-    }
-    onLoad();
-  },[])
-
- 
 
 /**
    * Perform the API call to fetch the user's cart and return the response
@@ -170,11 +105,11 @@ const Products = () => {
    *      "message": "Protected route, Oauth2 Bearer token not found"
    * }
    */
- const fetchCart = async (token) => {
+ const fetchCart = useCallback(async (token) => {
   if (!token) return;
 
   try {
-    // TODO: CRIO_TASK_MODULE_CART - Pass Bearer token inside "Authorization" header to get data from "GET /cart" API and return the response data
+    //  Pass Bearer token inside "Authorization" header to get data from "GET /cart" API and return the response data
    let url=config.endpoint+'/cart';
    let cartDatas=await axios.get(url,{headers:{Authorization:`Bearer ${token}`}});
 
@@ -194,10 +129,41 @@ const Products = () => {
     }
     return null;
   }
-};
+},[enqueueSnackbar]);
+  // Optimise API calls with debounce search implementation
+  /**
+   * Definition for debounce handler
+   * With debounce, this is the function to be called whenever the user types text in the searchbar field
+   *
+   * @param {{ target: { value: string } }} event
+   *    JS event object emitted from the search input field
+   *
+   * @param {NodeJS.Timeout} debounceTimeout
+   *    Timer id set for the previous debounce call
+   *
+   */
 
+  useEffect( ()=>{
+    async function onLoad(){
+       const product=await performAPICall();
+      let user=localStorage.getItem('username');
+        if (user) {
+      updateUserLoggedIn(true);
+    }
+  //  {user && updateUserLoggedIn(true)}
+      let token=localStorage.getItem('token');
+      if(token){
+        updateUserToken(token);
+        const cartItems=await fetchCart(token);
+        //console.log()
+        updateUserCartItems(cartItems);// Array of objects with productId and quantity of products in cart
+        const cartData=await generateCartItemsFrom(cartItems,product)
+        updateCartData(cartData);
+      }
+  }
+    onLoad();
+  },[fetchCart])
 
-// TODO: CRIO_TASK_MODULE_CART - Return if a product already exists in the cart
 /**
  * Return if a product already is present in the cart
  *
@@ -213,7 +179,6 @@ const Products = () => {
 const isItemInCart = (items, productId) => {
   // items is whole data array
   for(let i=0;i<items.length;i++){
-    // console.log(items[i])
       if(items[i]['_id']===productId){
         enqueueSnackbar('Item already in cart. Use the cart sidebar to update quantity or remove item.',{variant:"warning"});
         return true;
@@ -269,9 +234,8 @@ const addToCart = async (token, items,products,productId,qty,options = { prevent
                if(token ){
         updateUserToken(token);
         const cartItems=await fetchCart(token);
-        //console.log()
         updateUserCartItems(cartItems);// Array of objects with productId and quantity of products in cart
-       const cartData=await generateCartItemsFrom(cartItems,products);
+        const cartData=await generateCartItemsFrom(cartItems,products);
         updateCartData(cartData);
       }
 
@@ -280,8 +244,6 @@ const addToCart = async (token, items,products,productId,qty,options = { prevent
         }
       }
       else {
-        console.log("Inside else");
-        console.log("usercart",items);
             // udpate only quantity
             // items.qty++
             let index;
@@ -304,24 +266,23 @@ const addToCart = async (token, items,products,productId,qty,options = { prevent
       }
 };
 
-
+// addItems 
 let addItems=(e)=>{
-  {!userLoggedIn && enqueueSnackbar("Login to add an item to the Cart",{variant:"warning"}) };
-  if(userLoggedIn){
-    let result=isItemInCart(cartData,e.target.value)
+  if (!userLoggedIn) {
+    enqueueSnackbar("Login to add an item to the Cart", {
+      variant: "warning"
+    });
+    return;
+  }
+  const result=isItemInCart(cartData,e.target.value)
     if(!result){
       addToCart(userToken,userCartItems,productData,e.target.value,1,{preventDuplicate: true});
     }else{
       enqueueSnackbar('Item already in cart. Use the cart sidebar to update quantity or remove item.',{variant:"warning"});
     }
-  }
-  
-  
 }
-
+//Handle add and delete quantity
 const onButtonClick=(id,qty,options={preventDuplicate: false})=>{
-  console.log(id, qty, options);
-  console.log("Button Click")
   console.log(id,qty,options);
 // token, items,products,productId,qty,options = { preventDuplicate: false }
   addToCart(userToken,userCartItems,productData,id,qty,options);
