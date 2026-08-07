@@ -10,7 +10,7 @@ import {
 import { Box } from "@mui/system";
 import axios from "axios";
 import { useSnackbar } from "notistack";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState,useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { config } from "../App";
 import Cart, { getTotalCartValue, generateCartItemsFrom, getTotalItems } from "./Cart";
@@ -62,7 +62,7 @@ const AddNewAddressView = ({
 const Checkout = () => {
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
-
+  const addressLoaded = useRef(false);
   const { enqueueSnackbar } = useSnackbar();
 
   const [items, setItems] = useState([]);
@@ -73,8 +73,8 @@ const Checkout = () => {
     isAddingNewAddress: false,
     value: "",
   });
-
-  const getProducts = async () => {
+// Get All products
+  const getProducts = useCallback(async () => {
     try {
       const res = await axios.get(`${config.endpoint}/images`);
 
@@ -83,9 +83,9 @@ const Checkout = () => {
     } catch {
       enqueueSnackbar("Could not fetch products", { variant: "error" });
     }
-  };
-
-  const fetchCart = async () => {
+  }, [enqueueSnackbar]);
+//Get Cart
+  const fetchCart = useCallback(async () => {
     if (!token) return;
     try {
       const res = await axios.get(`${config.endpoint}/cart`, {
@@ -96,21 +96,24 @@ const Checkout = () => {
     } catch {
       enqueueSnackbar("Could not fetch cart details", { variant: "error" });
     }
-  };
+  }, [enqueueSnackbar, token]);
 
-  const getAddresses = async () => {
+  //get Addressses
+  const getAddresses = useCallback(async () => {
     if (!token) return;
-
     try {
       const res = await axios.get(`${config.endpoint}/user/addresses`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-
-      setAddresses({ ...addresses, all: res.data });
+      console.log(res);
+      if(res.data){
+      setAddresses({ ...addresses, all: res.data.addresses });
+      }
+      return res.data;
     } catch {
       enqueueSnackbar("Could not fetch addresses", { variant: "error" });
     }
-  };
+  },[enqueueSnackbar,token,addresses]);
 
   const addAddress = async (token, address) => {
     try {
@@ -196,36 +199,41 @@ const Checkout = () => {
     }
   };
 
+//On loading page
   useEffect(() => {
     const loadData = async () => {
       const productsData = await getProducts();
       const cartData = await fetchCart();
-
       if (productsData && cartData) {
         const cartItems = generateCartItemsFrom(cartData, productsData);
         setItems(cartItems);
       }
-    };
-
+     if (addressLoaded.current) {
+      return;
+      }
+    addressLoaded.current = true;
+    const res = await getAddresses();
+    if(res.addresses){
+      setAddresses({ ...addresses, all: res.addresses });
+    }
+    }
     loadData();
-  }, []);
+  }, [getProducts, fetchCart,getAddresses,addresses]);
 
   useEffect(() => {
     if (!token) {
       enqueueSnackbar("You must be logged in to access checkout page", {
         variant: "info",
       });
-
       navigate("/");
     } else {
-      getAddresses();
+   //   getAddresses();
     }
-  }, [token]);
+  }, [token,enqueueSnackbar,navigate]);
 
   return (
     <>
       <Header />
-
       <Grid container>
         <Grid item xs={12} md={9}>
           <Box className="shipping-container" minHeight="100vh">
@@ -341,7 +349,6 @@ const Checkout = () => {
           </Box>
         </Grid>
       </Grid>
-
       <Footer />
     </>
   );
