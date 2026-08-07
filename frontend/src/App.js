@@ -4,7 +4,7 @@ import Register from "./components/Register";
 import Product from "./components/Products";
 import Login from "./components/Login";
 import { SnackbarProvider } from 'notistack';
-import FoodMenuTabs from './components/FoodMenuTabs';
+//import FoodMenuTabs from './components/FoodMenuTabs';
 import Checkout from './components/Checkout';
 import Thanks from './components/Thanks';
 export const config = {
