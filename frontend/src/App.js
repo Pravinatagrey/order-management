@@ -8,7 +8,7 @@ import { SnackbarProvider } from 'notistack';
 import Checkout from './components/Checkout';
 import Thanks from './components/Thanks';
 export const config = {
-  endpoint: `${process.env.API_URL}` || `http://localhost:8082/api/v1`
+  endpoint: process.env.API_URL || `http://localhost:8082/api/v1`
 };
 function App() {
   return (
