@@ -4,10 +4,30 @@ const { handleError, verifyAuth } = require("../utils");
 const User = require("../models/User");
 const randomid = require("nanoid").nanoid;
 
- const getAddresses = async (req, res) => {
-  console.log(`GET request received to "/user/addresses"`);
+const getAddresses = async (req, res) => {
+  try {
+    console.log('GET request received to "/user/addresses"');
+      if (!req.user) {
+      return res.status(401).json({
+        message: "User not authenticated"
+      });
+    }
+ const userId = req.user._id || req.user.id;
+ const userData = await User.findById(userId);
 
-  return res.status(200).json(req.user.addresses);
+    return res.status(200).json({
+      success: true,
+      addresses: userData.addresses || []
+    });
+
+  } catch (error) {
+    console.error("Get addresses error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to get addresses"
+    });
+  }
 }
 //updating address
 const updateAddress =  async (req, res) => {
